@@ -1,128 +1,142 @@
 import 'package:flutter/material.dart';
+import 'package:flutterwebapp/bloc/home_bloc.dart';
+import 'package:flutterwebapp/widget/header.dart';
 import 'package:flutterwebapp/widget/menu.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
 
-  Widget actionPart(){
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 30.0, top: 50.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Thursday, 14 May 2020',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(
-                height: 10.0,
-              ),
-              Container(
-                color: Colors.grey,
-                height: 1.0,
-                width: 150.0,
-              ),
-              SizedBox(
-                height: 10.0,
-              ),
-              Text(
-                'Follow Us',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(
-                height: 10.0,
-              ),
-              Container(
-                color: Colors.grey,
-                height: 1.0,
-                width: 200.0,
-              ),
-              SizedBox(
-                height: 10.0,
-              ),
-              Image.asset(
-                'assets/social_media.png',
-              ),
-            ],
+class _HomeScreenState extends State<HomeScreen> {
+  ScrollController _controller;
+  final _homeBloc = HomeBloc();
+
+  _scrollListener() {
+    if (_controller.offset >= _controller.position.maxScrollExtent &&
+        !_controller.position.outOfRange) {
+      print('reach the bottom');
+      _homeBloc.scrollSink(3);
+    } else if (_controller.offset <= _controller.position.minScrollExtent &&
+        !_controller.position.outOfRange) {
+      print('reach the top');
+      _homeBloc.scrollSink(1);
+    } else {
+      _homeBloc.scrollSink(2);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ScrollController();
+    _controller.addListener(_scrollListener);
+  }
+
+  Widget sideNav({IconData icon, bool isPositioned = false}) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Stack(
+        children: [
+          Icon(
+            icon,
+            color: isPositioned ? Colors.blue : Colors.black,
           ),
-        ),
-        Center(
-          child: Image.asset(
-            'assets/logo.png',
-            //height: 200.0,
-            //width: 250.0,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 30.0, top: 50.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'Epaper',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(
-                height: 10.0,
-              ),
-              Container(
-                color: Colors.grey,
-                height: 1.0,
-                width: 50.0,
-              ),
-              Image.asset(
-                'assets/degree.png',
-              ),
-            ],
-          ),
-        )
-      ],
+          isPositioned
+              ? CircleAvatar(
+                  backgroundColor: Colors.blue,
+                  radius: 2.0,
+                )
+              : SizedBox(),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.white,
-            flexibleSpace: Padding(
-              padding: const EdgeInsets.only(bottom: 30.0),
-              child: actionPart()
-            ),
-            centerTitle: true,
-            expandedHeight: 250.0,
-            floating: true,
-            pinned: true,
-            bottom: preferredSizeWidget,
-          ),
-          SliverFillRemaining(
+      backgroundColor: Color(0xfff2f2f2),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _controller,
             child: Column(
               children: [
+                Image.asset('assets/header.png'),
                 Container(
-                  color: Colors.grey,
-                  height: 1.0,
+                  //color: Colors.grey,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 60.0, vertical: 5.0),
+                  height: 300.0,
                   width: double.maxFinite,
+                  child: Card(child: Center(child: Text('Search'))),
                 ),
-                Center(
-                  child: Text('Body'),
+                SizedBox(
+                  height: 20.0,
+                ),
+                Container(
+                  //color: Colors.grey,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 60.0, vertical: 5.0),
+                  height: 300.0,
+                  width: double.maxFinite,
+                  child: Card(child: Center(child: Text('Promotion'))),
+                ),
+                SizedBox(
+                  height: 20.0,
+                ),
+                Container(
+                  //color: Colors.grey,
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 60.0, vertical: 5.0),
+                  height: 200.0,
+                  width: double.maxFinite,
+                  child: Card(child: Center(child: Text('Offer'))),
                 ),
               ],
             ),
-          )
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: StreamBuilder<int>(
+                stream: _homeBloc.scrollStream,
+                builder: (context, snapshot) {
+                  return Container(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: 10.0, top: 10.0, right: 5.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          sideNav(
+                            icon: Icons.search,
+                            isPositioned:
+                                (snapshot.hasData && (snapshot.data == 1))
+                                    ? true
+                                    : false,
+                          ),
+                          sideNav(
+                            icon: Icons.monetization_on,
+                            isPositioned:
+                                (snapshot.hasData && (snapshot.data == 2))
+                                    ? true
+                                    : false,
+                          ),
+                          sideNav(
+                            icon: Icons.local_offer,
+                            isPositioned:
+                                (snapshot.hasData && (snapshot.data == 3))
+                                    ? true
+                                    : false,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+          ),
         ],
       ),
     );
